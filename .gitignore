@@ -1,0 +1,23 @@
+# Next.js Build
+frontend/.next/
+frontend/node_modules/
+frontend/out/
+
+# Go Build
+backend/server.exe
+backend/digsi.db
+backend/keys/*.pem
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Environment
+.env*
+.local
