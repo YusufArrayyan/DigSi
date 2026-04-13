@@ -2,8 +2,10 @@ package db
 
 import (
 	"github.com/glebarez/sqlite"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"log"
+	"os"
 )
 
 var DB *gorm.DB
@@ -47,7 +49,19 @@ type FileHash struct {
 
 func InitDB() {
 	var err error
-	DB, err = gorm.Open(sqlite.Open("digsi.db"), &gorm.Config{})
+	dsn := os.Getenv("DATABASE_URL")
+	if dsn == "" {
+		dsn = os.Getenv("POSTGRES_URL") // Support Vercel name
+	}
+
+	if dsn != "" {
+		log.Println("Connecting to PostgreSQL...")
+		DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	} else {
+		log.Println("Connecting to SQLite (digsi.db)...")
+		DB, err = gorm.Open(sqlite.Open("digsi.db"), &gorm.Config{})
+	}
+
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
