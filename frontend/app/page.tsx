@@ -3,6 +3,7 @@
 import React from "react";
 import { LayoutWrapper } from "@/components/LayoutWrapper";
 import { motion } from "framer-motion";
+import { API_BASE_URL } from "@/lib/api";
 import { ShieldCheck, Zap, Lock, Globe, ArrowRight, Fingerprint, Activity, Database } from "lucide-react";
 import Link from "next/link";
 
@@ -39,7 +40,7 @@ export default function DashboardPage() {
   });
 
   React.useEffect(() => {
-    fetch("http://127.0.0.1:8080/api/stats")
+    fetch(`${API_BASE_URL}/api/stats`)
       .then(res => res.json())
       .then(data => {
         setStats(data);

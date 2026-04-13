@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Camera, Upload, CheckCircle2, AlertTriangle, Fingerprint, Lock, Search, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LayoutWrapper } from "@/components/LayoutWrapper";
+import { API_BASE_URL } from "@/lib/api";
 
 interface VerificationResult {
   signature_valid: boolean;
@@ -33,9 +34,13 @@ export default function VerificationPage() {
   const streamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
-    import("pdfjs-dist").then((pdfjs) => {
-      pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
-    });
+    if (typeof window !== "undefined") {
+      import("pdfjs-dist").then((pdfjs) => {
+        if (!pdfjs.GlobalWorkerOptions.workerSrc) {
+          pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+        }
+      });
+    }
   }, []);
 
   // Camera handling logic
@@ -97,7 +102,7 @@ export default function VerificationPage() {
     setResult(null);
     await new Promise((resolve) => setTimeout(resolve, 1500));
     try {
-      const res = await fetch("http://127.0.0.1:8080/api/verify", {
+      const res = await fetch(`${API_BASE_URL}/api/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -158,7 +163,7 @@ export default function VerificationPage() {
       const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
       const hashArray = Array.from(new Uint8Array(hashBuffer));
       const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-      const res = await fetch("http://127.0.0.1:8080/api/verify-hash", {
+      const res = await fetch(`${API_BASE_URL}/api/verify-hash`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ file_hash: hashHex }),

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { API_BASE_URL } from "@/lib/api";
 
 interface AdminContextType {
   isAdmin: boolean;
@@ -19,7 +20,10 @@ export const AdminProvider = ({ children }: { children: React.ReactNode }) => {
   const [username, setUsername] = useState<string | null>(null);
   const [token, setToken] = useState<string | null>(null);
 
+  const [hasMounted, setHasMounted] = useState(false);
+
   useEffect(() => {
+    setHasMounted(true);
     const savedToken = localStorage.getItem("digsi_admin_token");
     const savedUser = localStorage.getItem("digsi_admin_user");
     if (savedToken && savedUser) {
@@ -31,7 +35,7 @@ export const AdminProvider = ({ children }: { children: React.ReactNode }) => {
 
   const login = async (user: string, pass: string) => {
     try {
-        const res = await fetch("http://127.0.0.1:8080/api/auth/login", {
+        const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ username: user, password: pass })
@@ -55,7 +59,7 @@ export const AdminProvider = ({ children }: { children: React.ReactNode }) => {
 
   const register = async (user: string, pass: string) => {
     try {
-        const res = await fetch("http://127.0.0.1:8080/api/auth/register", {
+        const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ username: user, password: pass })
@@ -87,6 +91,8 @@ export const AdminProvider = ({ children }: { children: React.ReactNode }) => {
     };
     return fetch(url, { ...options, headers });
   };
+
+  if (!hasMounted) return null;
 
   return (
     <AdminContext.Provider value={{ isAdmin, username, token, login, register, logout, callApi }}>

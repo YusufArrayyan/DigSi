@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { LayoutWrapper } from "@/components/LayoutWrapper";
 import { motion, AnimatePresence } from "framer-motion";
 import { UserPlus, FilePlus, Calendar, ShieldCheck, Database, ArrowUpCircle, Info, Inbox, Check, X, Clock } from "lucide-react";
+import { API_BASE_URL } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { useAdmin } from "@/context/AdminContext";
 
@@ -34,7 +35,7 @@ export default function AdminPage() {
 
   const fetchSubmissions = async () => {
     try {
-        const res = await callApi("http://127.0.0.1:8080/api/pending-submissions");
+        const res = await callApi(`${API_BASE_URL}/api/pending-submissions`);
         const data = await res.json();
         setSubmissions(data.submissions || []);
     } catch (e) {
@@ -60,7 +61,7 @@ export default function AdminPage() {
     if (!fileHash) return;
     setLoading(true);
     try {
-      const res = await callApi("http://127.0.0.1:8080/api/register-hash", {
+      const res = await callApi(`${API_BASE_URL}/api/register-hash`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ file_hash: fileHash, student_name: studentName, course_name: courseName, issue_date: issueDate }),
@@ -74,7 +75,7 @@ export default function AdminPage() {
 
   const handleApprove = async (id: string) => {
       try {
-          const res = await callApi("http://127.0.0.1:8080/api/approve-hash", {
+          const res = await callApi(`${API_BASE_URL}/api/approve-hash`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ id }),

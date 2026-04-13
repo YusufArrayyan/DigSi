@@ -4,6 +4,7 @@ import { useState } from "react";
 import { LayoutWrapper } from "@/components/LayoutWrapper";
 import { motion, AnimatePresence } from "framer-motion";
 import { FilePlus, ShieldCheck, Download, User, BookOpen, Calendar, Hash, ArrowRight, CheckCircle2 } from "lucide-react";
+import { API_BASE_URL } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { useAdmin } from "@/context/AdminContext";
 
@@ -24,7 +25,7 @@ export default function IssuePage() {
     setQrImage(null);
 
     try {
-      const res = await callApi("http://127.0.0.1:8080/api/generate", {
+      const res = await callApi(`${API_BASE_URL}/api/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
