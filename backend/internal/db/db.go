@@ -6,6 +6,7 @@ import (
 	"gorm.io/gorm"
 	"log"
 	"os"
+	"strings"
 )
 
 var DB *gorm.DB
@@ -50,6 +51,15 @@ type FileHash struct {
 func InitDB() {
 	var err error
 	// Check multiple possible environment variables from Vercel/Neon
+	// Debug: Print available environment variable keys (NOT values) to identify Vercel naming
+	for _, e := range os.Environ() {
+		pair := strings.SplitN(e, "=", 2)
+		key := pair[0]
+		if strings.Contains(key, "DATABASE") || strings.Contains(key, "POSTGRES") || strings.Contains(key, "NEON") || strings.Contains(key, "URL") {
+			log.Println("Found Env Var Key:", key)
+		}
+	}
+
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
 		dsn = os.Getenv("POSTGRES_URL")
