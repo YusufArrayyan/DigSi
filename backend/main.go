@@ -86,5 +86,9 @@ func main() {
 		return c.SendString("OK")
 	})
 
-	log.Fatal(app.Listen("0.0.0.0:8080"))
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	log.Fatal(app.Listen(":" + port))
 }

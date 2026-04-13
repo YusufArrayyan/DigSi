@@ -55,24 +55,28 @@ type ApproveRequest struct {
 
 // SetupRoutes configures the API routes
 func SetupRoutes(app *fiber.App) {
-	api := app.Group("/api")
+	setup := func(router fiber.Router) {
+		// Auth routes
+		router.Post("/auth/register", RegisterUser)
+		router.Post("/auth/login", LoginUser)
 
-	// Auth routes
-	api.Post("/auth/register", RegisterUser)
-	api.Post("/auth/login", LoginUser)
+		// Core routes
+		router.Post("/verify", VerifyCertificate)
+		router.Post("/verify-hash", VerifyFileHash)
+		router.Post("/submit-for-approval", SubmitForApproval)
+		router.Get("/stats", GetStats)
 
-	// Core routes
-	api.Post("/verify", VerifyCertificate)
-	api.Post("/verify-hash", VerifyFileHash)
-	api.Post("/submit-for-approval", SubmitForApproval)
-	api.Get("/stats", GetStats)
+		// Protected Admin routes
+		admin := router.Group("/", middleware.AuthMiddleware)
+		admin.Post("/generate", GenerateCertificate)
+		admin.Post("/register-hash", RegisterFileHash)
+		admin.Get("/pending-submissions", GetPendingSubmissions)
+		admin.Post("/approve-hash", ApproveSubmission)
+	}
 
-	// Protected Admin routes
-	admin := api.Group("/", middleware.AuthMiddleware)
-	admin.Post("/generate", GenerateCertificate)
-	admin.Post("/register-hash", RegisterFileHash)
-	admin.Get("/pending-submissions", GetPendingSubmissions)
-	admin.Post("/approve-hash", ApproveSubmission)
+	// Mount on both to handle Vercel proxy stripping behaviors
+	setup(app.Group("/api"))
+	setup(app)
 }
 
 // Auth Handlers

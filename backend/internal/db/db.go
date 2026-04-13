@@ -49,13 +49,23 @@ type FileHash struct {
 
 func InitDB() {
 	var err error
+	// Check multiple possible environment variables from Vercel/Neon
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
-		dsn = os.Getenv("POSTGRES_URL") // Support Vercel name
+		dsn = os.Getenv("POSTGRES_URL")
+	}
+	if dsn == "" {
+		dsn = os.Getenv("POSTGRES_PRISMA_URL")
+	}
+	if dsn == "" {
+		dsn = os.Getenv("NEON_DATABASE_URL")
+	}
+	if dsn == "" {
+		dsn = os.Getenv("STORAGE_URL")
 	}
 
 	if dsn != "" {
-		log.Println("Connecting to PostgreSQL...")
+		log.Println("Connecting to PostgreSQL (Found DATABASE_URL)...")
 		DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	} else {
 		log.Println("Connecting to SQLite (digsi.db)...")
