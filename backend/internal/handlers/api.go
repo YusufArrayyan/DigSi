@@ -95,7 +95,6 @@ func RegisterUser(c *fiber.Ctx) error {
 
 	if err := db.DB.Create(&user).Error; err != nil {
 		log.Printf("ERROR: Failed to register user %s. DB Error: %v", req.Username, err)
-		// TEMPORARY: Return exact error for cloud debugging
 		return c.Status(fiber.StatusConflict).JSON(fiber.Map{"error": "DB Error: " + err.Error()})
 	}
 

@@ -86,7 +86,8 @@ func InitDB() {
 
 	if err != nil {
 		log.Printf("CRITICAL: Failed to connect to database using DSN. Error: %v", err)
-		log.Fatal("Stopping backend due to database connection failure.")
+		log.Println("WARNING: Server will continue WITHOUT database connection for debugging.")
+		return
 	}
 
 	// Auto-migrate the schema with localized error handling

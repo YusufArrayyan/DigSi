@@ -89,9 +89,14 @@ func main() {
 			log.Fatalf("Failed to read private key: %v", err)
 		}
 		block, _ := pem.Decode(keyData)
+		if block == nil {
+			log.Printf("ERROR: Failed to decode RSA private key from %s", keyPath)
+			return
+		}
 		privKey, err = x509.ParsePKCS1PrivateKey(block.Bytes)
 		if err != nil {
-			log.Fatalf("Failed to parse private key: %v", err)
+			log.Printf("ERROR: Failed to parse private key: %v", err)
+			return
 		}
 	}
 	handlers.TempPrivateKey = privKey
