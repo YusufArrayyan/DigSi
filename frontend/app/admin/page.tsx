@@ -44,6 +44,7 @@ export default function AdminPage() {
     try {
         const res = await callApi(`${API_BASE_URL}/api/pending-submissions`);
         const data = await res.json();
+        console.log("Submissions received:", data.submissions);
         setSubmissions(data.submissions || []);
     } catch (e) {
         console.error("Failed to fetch submissions");

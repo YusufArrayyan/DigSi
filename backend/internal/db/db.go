@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -15,10 +16,13 @@ var DB *gorm.DB
 
 // User model for Admin/User Authentication
 type User struct {
-	gorm.Model
-	Username string `gorm:"unique;not null" json:"username"`
-	Password string `gorm:"not null" json:"-"`
-	Role     string `gorm:"default:user" json:"role"`
+	ID        uint           `gorm:"primaryKey" json:"id"`
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
+	Username  string         `gorm:"unique;not null" json:"username"`
+	Password  string         `gorm:"not null" json:"-"`
+	Role      string         `gorm:"default:user" json:"role"`
 }
 
 // Certificate model for RSA-signed seals
@@ -33,7 +37,10 @@ type Certificate struct {
 
 // PendingSubmission model for Admin Inbox
 type PendingSubmission struct {
-	gorm.Model
+	ID        uint           `gorm:"primaryKey" json:"id"`
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
 	FileHash    string `json:"file_hash"`
 	StudentName string `json:"student_name"`
 	CourseName  string `json:"course_name"`
