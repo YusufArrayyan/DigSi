@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { useAdmin } from "@/context/AdminContext";
 
 interface Submission {
-    id: string;
+    id: number;
     file_hash: string;
     student_name: string;
     course_name: string;
@@ -79,17 +79,22 @@ export default function AdminPage() {
     } finally { setLoading(false); }
   };
 
-  const handleApprove = async (id: string) => {
+  const handleApprove = async (id: number) => {
       try {
           const res = await callApi(`${API_BASE_URL}/api/approve-hash`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ id }),
+              body: JSON.stringify({ id: Number(id) }),
           });
           if (res.ok) {
               setSubmissions(prev => prev.filter(s => s.id !== id));
+          } else {
+              alert("Gagal menyetujui. Server mengembalikan error.");
           }
-      } catch (e) { alert("Gagal menyetujui."); }
+      } catch (e) { 
+          console.error("Approval error:", e);
+          alert("Gagal menyetujui koneksi."); 
+      }
   };
 
   return (

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { LayoutWrapper } from "@/components/LayoutWrapper";
 import { motion, AnimatePresence } from "framer-motion";
-import { FilePlus, ShieldCheck, Download, User, BookOpen, Calendar, Hash, ArrowRight, CheckCircle2, Clock } from "lucide-react";
+import { FilePlus, ShieldCheck, Download, User, BookOpen, Calendar, Hash, ArrowRight, CheckCircle2, Clock, ArrowUpCircle } from "lucide-react";
 import { API_BASE_URL } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { useAdmin } from "@/context/AdminContext";
@@ -21,12 +21,34 @@ export default function IssuePage() {
   const [success, setSuccess] = useState(false);
   const { isAdmin, callApi } = useAdmin();
 
+  const extractMetadata = (filename: string) => {
+    // Clean extension
+    const name = filename.replace(/\.[^/.]+$/, "");
+    
+    // Heuristic: Split by common delimiters
+    const parts = name.split(/[_\-\s]+/).filter(p => !["sertifikat", "cert", "certificate", "final"].includes(p.toLowerCase()));
+    
+    if (parts.length >= 2) {
+      // Guess First part as Name, Second as Course
+      setStudentName(parts[0].charAt(0).toUpperCase() + parts[0].slice(1));
+      setCourseName(parts.slice(1).join(" "));
+    } else if (parts.length === 1) {
+      setStudentName(parts[0]);
+    }
+  };
+
   const calculateHash = async (file: File) => {
+    setLoading(true); // Scanning effect
     const buffer = await file.arrayBuffer();
     const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-    setFileHash(hashHex);
+    
+    setTimeout(() => {
+        setFileHash(hashHex);
+        extractMetadata(file.name);
+        setLoading(false);
+    }, 800);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -36,6 +58,7 @@ export default function IssuePage() {
 
     try {
       const endpoint = isAdmin ? "/api/generate" : "/api/submit-for-approval";
+      // Ensure the payload matches backend expectations
       const payload = isAdmin ? {
         serial_number: serialNumber || `DG-${Date.now().toString().slice(-4)}`,
         student_name: studentName,
@@ -104,9 +127,33 @@ export default function IssuePage() {
 
                     <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {!isAdmin && (
-                            <div className="space-y-2 col-span-1 md:col-span-2">
-                                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Upload File Sertifikat (Bakal dihitung Hash)</label>
-                                <input required type="file" className="w-full clay-input p-4 text-xs font-bold" onChange={(e) => e.target.files?.[0] && calculateHash(e.target.files[0])} />
+                            <div className="space-y-4 col-span-1 md:col-span-2">
+                                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Upload Draft Sertifikat</label>
+                                <motion.div 
+                                    whileHover={{ scale: 1.01 }}
+                                    className={cn(
+                                        "p-8 clay-card bg-white border-4 border-dashed border-slate-100 flex flex-col items-center justify-center text-center space-y-4 cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all group",
+                                        fileHash ? "border-blue-400 bg-blue-50" : ""
+                                    )}
+                                    onClick={() => document.getElementById("file-upload")?.click()}
+                                >
+                                    <input 
+                                        id="file-upload"
+                                        type="file" 
+                                        className="hidden" 
+                                        onChange={(e) => e.target.files?.[0] && calculateHash(e.target.files[0])} 
+                                    />
+                                    <div className={cn(
+                                        "w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition-all",
+                                        fileHash ? "bg-blue-500 text-white" : "bg-blue-50 text-blue-500 group-hover:bg-blue-500 group-hover:text-white"
+                                    )}>
+                                        <ArrowUpCircle className="w-8 h-8" />
+                                    </div>
+                                    <div>
+                                        <p className="font-bold text-slate-800">{fileHash ? "Sertifikat Terdeteksi" : "Klik atau Tarik File Disini"}</p>
+                                        <p className="text-[10px] text-slate-400 font-medium">{fileHash ? `HASH divalidasi: ${fileHash.slice(0, 20)}...` : "File Anda akan dipindai untuk ekstraksi data otomatis."}</p>
+                                    </div>
+                                </motion.div>
                             </div>
                         )}
 
