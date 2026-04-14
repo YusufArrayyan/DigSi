@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { LayoutWrapper } from "@/components/LayoutWrapper";
 import { motion, AnimatePresence } from "framer-motion";
-import { FilePlus, ShieldCheck, Download, User, BookOpen, Calendar, Hash, ArrowRight, CheckCircle2 } from "lucide-react";
+import { FilePlus, ShieldCheck, Download, User, BookOpen, Calendar, Hash, ArrowRight, CheckCircle2, Clock } from "lucide-react";
 import { API_BASE_URL } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { useAdmin } from "@/context/AdminContext";
@@ -13,35 +13,58 @@ export default function IssuePage() {
   const [courseName, setCourseName] = useState("");
   const [issueDate, setIssueDate] = useState("");
   const [serialNumber, setSerialNumber] = useState("");
+  const [fileHash, setFileHash] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [qrImage, setQrImage] = useState<string | null>(null);
   const [signature, setSignature] = useState<string | null>(null);
-  const { callApi } = useAdmin();
+  const [success, setSuccess] = useState(false);
+  const { isAdmin, callApi } = useAdmin();
 
-  const handleGenerate = async (e: React.FormEvent) => {
+  const calculateHash = async (file: File) => {
+    const buffer = await file.arrayBuffer();
+    const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+    setFileHash(hashHex);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setQrImage(null);
+    setSuccess(false);
 
     try {
-      const res = await callApi(`${API_BASE_URL}/api/generate`, {
+      const endpoint = isAdmin ? "/api/generate" : "/api/submit-for-approval";
+      const payload = isAdmin ? {
+        serial_number: serialNumber || `DG-${Date.now().toString().slice(-4)}`,
+        student_name: studentName,
+        course_name: courseName,
+        issue_date: issueDate,
+      } : {
+        file_hash: fileHash,
+        student_name: studentName,
+        course_name: courseName,
+        issue_date: issueDate,
+      };
+
+      const res = await callApi(`${API_BASE_URL}${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          serial_number: serialNumber || `DG-${Date.now().toString().slice(-4)}`,
-          student_name: studentName,
-          course_name: courseName,
-          issue_date: issueDate,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
       if (res.ok) {
-        setQrImage(data.qr_image_base64);
-        setSignature(data.signature);
+        if (isAdmin) {
+          setQrImage(data.qr_image_base64);
+          setSignature(data.signature);
+        } else {
+          setSuccess(true);
+          setStudentName(""); setCourseName(""); setIssueDate(""); setFileHash("");
+        }
       } else {
-        alert("Gagal menerbitkan sertifikat.");
+        alert(data.error || "Gagal memproses pengajuan.");
       }
     } catch (err) {
       alert("Network Error: Hubungkan ke server backend.");
@@ -61,22 +84,32 @@ export default function IssuePage() {
                 <ShieldCheck className="text-white w-10 h-10" />
             </motion.div>
             <div className="pb-2">
-                <h1 className="text-4xl font-black text-slate-800 tracking-tight leading-tight">Secure Issue Portal</h1>
-                <p className="text-slate-500 font-medium italic">"Crypt your certificate" — Sematkan segel keamanan digital pada dokumen Anda.</p>
+                <h1 className="text-4xl font-black text-slate-800 tracking-tight leading-tight">
+                    {isAdmin ? "Secure Issue Portal" : "Submit for Verification"}
+                </h1>
+                <p className="text-slate-500 font-medium italic">
+                    {isAdmin ? '"Crypt your certificate" — Sematkan segel keamanan digital.' : "Kirim sertifikat Anda untuk divalidasi oleh Admin."}
+                </p>
             </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
             
-            {/* Form Section */}
             <div className="lg:col-span-12 xl:col-span-7">
                 <div className="clay-card p-10 bg-white space-y-8">
                     <div className="flex items-center gap-3 border-b border-slate-100 pb-6">
                         <FilePlus className="text-blue-500 w-6 h-6" />
-                        <h3 className="font-bold text-xl text-slate-800 tracking-tight">Data Sertifikat Digital</h3>
+                        <h3 className="font-bold text-xl text-slate-800 tracking-tight">Data Sertifikat</h3>
                     </div>
 
-                    <form onSubmit={handleGenerate} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {!isAdmin && (
+                            <div className="space-y-2 col-span-1 md:col-span-2">
+                                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Upload File Sertifikat (Bakal dihitung Hash)</label>
+                                <input required type="file" className="w-full clay-input p-4 text-xs font-bold" onChange={(e) => e.target.files?.[0] && calculateHash(e.target.files[0])} />
+                            </div>
+                        )}
+
                         <div className="space-y-2 col-span-1 md:col-span-2">
                             <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Nama Mahasiswa / Penerima</label>
                             <div className="relative">
@@ -101,27 +134,32 @@ export default function IssuePage() {
                             </div>
                         </div>
 
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Serial Number (Opsional)</label>
-                            <div className="relative">
-                                <Hash className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
-                                <input value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} type="text" className="w-full clay-input p-4 pl-12 text-slate-700 font-bold" placeholder="DIGSI-001" />
+                        {isAdmin && (
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Serial Number (Opsional)</label>
+                                <div className="relative">
+                                    <Hash className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+                                    <input value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} type="text" className="w-full clay-input p-4 pl-12 text-slate-700 font-bold" placeholder="DIGSI-001" />
+                                </div>
                             </div>
-                        </div>
+                        )}
 
                         <motion.button 
                             whileTap={{ scale: 0.95 }}
-                            disabled={loading} 
+                            disabled={loading || (!isAdmin && !fileHash)} 
                             type="submit" 
                             className="w-full clay-button py-5 !bg-blue-600 text-white font-black uppercase tracking-widest active:scale-95 transition-all md:col-span-2 flex items-center justify-center gap-4 mt-4 disabled:opacity-50"
                         >
                             {loading ? <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/20 border-t-white" /> : (
                                 <>
-                                    Generate DigSi Seal
+                                    {isAdmin ? "Generate DigSi Seal" : "Kirim ke Admin"}
                                     <ArrowRight className="w-4 h-4" />
                                 </>
                             )}
                         </motion.button>
+                    </form>
+                </div>
+            </div>
                     </form>
                 </div>
             </div>
@@ -160,6 +198,23 @@ export default function IssuePage() {
                                 <p className="text-[10px] text-slate-300 font-mono break-all line-clamp-2">Sign: {signature}</p>
                             </div>
                         </motion.div>
+                    ) : success ? (
+                        <motion.div 
+                            key="success"
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            className="clay-card p-10 bg-white flex flex-col items-center text-center space-y-6"
+                        >
+                            <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-2">
+                                <CheckCircle2 className="w-8 h-8" />
+                            </div>
+                            <h3 className="text-2xl font-black text-slate-800 tracking-tight">Berhasil Terkirim!</h3>
+                            <p className="text-sm text-slate-400 font-medium">Sertifikat Anda telah dikirim ke antrean verifikasi Admin.</p>
+                            <div className="p-8 clay-card bg-blue-50 border-4 border-white">
+                                <Clock className="w-12 h-12 text-blue-400 mx-auto mb-4" />
+                                <p className="text-[10px] text-blue-600 font-bold uppercase tracking-widest">Menunggu Validasi Admin</p>
+                            </div>
+                        </motion.div>
                     ) : (
                         <div className="clay-card p-12 bg-slate-50/50 border-4 border-dashed border-slate-200 flex flex-col items-center justify-center text-center space-y-6 min-h-[400px]">
                             <div className="w-20 h-20 bg-slate-200/50 rounded-full flex items-center justify-center">
@@ -167,7 +222,7 @@ export default function IssuePage() {
                             </div>
                             <div>
                                 <h4 className="font-bold text-slate-300 text-xl tracking-tight">Hasil Preview</h4>
-                                <p className="text-xs text-slate-300 font-medium max-w-[200px] mt-2">Isi form di sebelah kiri untuk melihat preview segel kriptografi Anda.</p>
+                                <p className="text-xs text-slate-300 font-medium max-w-[200px] mt-2">Isi form di sebelah kiri untuk mengirim sertifikat Anda ke sistem.</p>
                             </div>
                         </div>
                     )}

@@ -47,7 +47,7 @@ export const NavSidebar = () => {
         <NavItem href="/verify" icon={Search} label="Verify" active={pathname === "/verify"} />
         
         <AnimatePresence>
-          {isAdmin && (
+          {isAdmin ? (
             <motion.div 
               initial={{ opacity: 0, x: -20 }} 
               animate={{ opacity: 1, x: 0 }} 
@@ -56,6 +56,14 @@ export const NavSidebar = () => {
             >
               <NavItem href="/issue" icon={FilePlus} label="Issue" active={pathname === "/issue"} />
               <NavItem href="/admin" icon={Settings} label="Admin" active={pathname === "/admin"} />
+            </motion.div>
+          ) : username && (
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }} 
+              animate={{ opacity: 1, x: 0 }} 
+              exit={{ opacity: 0, x: -20 }}
+            >
+              <NavItem href="/issue" icon={FilePlus} label="Submit" active={pathname === "/issue"} />
             </motion.div>
           )}
         </AnimatePresence>
