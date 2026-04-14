@@ -86,14 +86,15 @@ export default function AdminPage() {
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ id: Number(id) }),
           });
+          const data = await res.json();
           if (res.ok) {
               setSubmissions(prev => prev.filter(s => s.id !== id));
           } else {
-              alert("Gagal menyetujui. Server mengembalikan error.");
+              alert("Gagal: " + (data.error || "Server mengembalikan error."));
           }
       } catch (e) { 
           console.error("Approval error:", e);
-          alert("Gagal menyetujui koneksi."); 
+          alert("Gagal menyambung ke server."); 
       }
   };
 

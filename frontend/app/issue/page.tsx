@@ -111,7 +111,7 @@ export default function IssuePage() {
                     {isAdmin ? "Secure Issue Portal" : "Submit for Verification"}
                 </h1>
                 <p className="text-slate-500 font-medium italic">
-                    {isAdmin ? '"Crypt your certificate" — Sematkan segel keamanan digital.' : "Kirim sertifikat Anda untuk divalidasi oleh Admin."}
+                    {isAdmin ? "Portal Penerbitan RSA: Buat sertifikat digital asli yang langsung terenkripsi." : "Kirim sertifikat Anda untuk divalidasi oleh Admin."}
                 </p>
             </div>
         </div>

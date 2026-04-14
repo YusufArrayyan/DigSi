@@ -8,6 +8,7 @@ import (
 	"digsi-backend/internal/db"
 	"digsi-backend/internal/middleware"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -278,12 +279,12 @@ func GetPendingSubmissions(c *fiber.Ctx) error {
 func ApproveSubmission(c *fiber.Ctx) error {
 	var req ApproveRequest
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request format"})
 	}
 
 	var sub db.PendingSubmission
 	if err := db.DB.First(&sub, req.ID).Error; err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Submission not found"})
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Pengajuan tidak ditemukan di database."})
 	}
 
 	// Move to ledger
@@ -293,7 +294,14 @@ func ApproveSubmission(c *fiber.Ctx) error {
 		CourseName:  sub.CourseName,
 		IssueDate:   sub.IssueDate,
 	}
-	db.DB.Create(&ledger)
+	
+	if err := db.DB.Create(&ledger).Error; err != nil {
+		// Detect duplicate hash
+		if strings.Contains(err.Error(), "unique") || strings.Contains(err.Error(), "duplicate") {
+			return c.Status(fiber.StatusConflict).JSON(fiber.Map{"error": "Hash sertifikat ini sudah terdaftar di ledger!"})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Gagal mendaftarkan hash: " + err.Error()})
+	}
 
 	// Update status
 	sub.Status = "approved"
