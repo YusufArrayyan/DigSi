@@ -26,6 +26,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<{ message: string; success: boolean } | null>(null);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [processingIds, setProcessingIds] = useState<Set<number>>(new Set());
   
   const { isAdmin, callApi } = useAdmin();
   const router = useRouter();
@@ -80,6 +81,7 @@ export default function AdminPage() {
   };
 
   const handleApprove = async (id: number) => {
+      setProcessingIds(prev => new Set(prev).add(id));
       try {
           const res = await callApi(`${API_BASE_URL}/api/approve-hash`, {
               method: "POST",
@@ -95,6 +97,39 @@ export default function AdminPage() {
       } catch (e) { 
           console.error("Approval error:", e);
           alert("Gagal menyambung ke server."); 
+      } finally {
+          setProcessingIds(prev => {
+              const next = new Set(prev);
+              next.delete(id);
+              return next;
+          });
+      }
+  };
+
+  const handleReject = async (id: number) => {
+      if (!confirm("Hapus pengajuan ini?")) return;
+      setProcessingIds(prev => new Set(prev).add(id));
+      try {
+          const res = await callApi(`${API_BASE_URL}/api/reject-hash`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ id: Number(id) }),
+          });
+          if (res.ok) {
+              setSubmissions(prev => prev.filter(s => s.id !== id));
+          } else {
+              const data = await res.json();
+              alert("Gagal: " + (data.error || "Gagal menghapus."));
+          }
+      } catch (e) {
+          console.error("Reject error:", e);
+          alert("Gagal menyambung ke server.");
+      } finally {
+          setProcessingIds(prev => {
+              const next = new Set(prev);
+              next.delete(id);
+              return next;
+          });
       }
   };
 
@@ -235,13 +270,21 @@ export default function AdminPage() {
                                             <motion.button 
                                                 whileTap={{ scale: 0.95 }}
                                                 onClick={() => handleApprove(sub.id)}
-                                                className="flex-1 clay-button py-2 bg-blue-50 text-blue-600 font-black text-[9px] uppercase tracking-widest hover:!bg-blue-600 hover:!text-white transition-all"
+                                                disabled={processingIds.has(sub.id)}
+                                                className="flex-1 clay-button py-2 bg-blue-50 text-blue-600 font-black text-[9px] uppercase tracking-widest hover:!bg-blue-600 hover:!text-white transition-all flex items-center justify-center gap-2"
                                             >
-                                                VERIFIKASI
+                                                {processingIds.has(sub.id) ? (
+                                                    <div className="animate-spin rounded-full h-3 w-3 border-2 border-blue-600/20 border-t-blue-600" />
+                                                ) : "VERIFIKASI"}
                                             </motion.button>
-                                            <button className="flex-none clay-button p-2 text-red-300 hover:text-red-500 transition-colors">
+                                            <motion.button 
+                                                whileTap={{ scale: 0.9 }}
+                                                onClick={() => handleReject(sub.id)}
+                                                disabled={processingIds.has(sub.id)}
+                                                className="flex-none clay-button p-2 text-red-300 hover:text-red-500 transition-colors disabled:opacity-50"
+                                            >
                                                 <X className="w-4 h-4" />
-                                            </button>
+                                            </motion.button>
                                         </div>
                                     </motion.div>
                                 ))

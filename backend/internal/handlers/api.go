@@ -73,6 +73,8 @@ func SetupRoutes(app *fiber.App) {
 		admin.Post("/generate", GenerateCertificate)
 		admin.Post("/register-hash", RegisterFileHash)
 		admin.Get("/pending-submissions", GetPendingSubmissions)
+		admin.Delete("/reject-hash", RejectSubmission)
+		admin.Post("/reject-hash", RejectSubmission)
 		admin.Post("/approve-hash", ApproveSubmission)
 	}
 
@@ -308,6 +310,19 @@ func ApproveSubmission(c *fiber.Ctx) error {
 	db.DB.Save(&sub)
 
 	return c.JSON(fiber.Map{"message": "Submission approved and registered."})
+}
+
+func RejectSubmission(c *fiber.Ctx) error {
+	var req ApproveRequest // Reuse same struct with ID
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request format"})
+	}
+
+	if err := db.DB.Delete(&db.PendingSubmission{}, req.ID).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Gagal menghapus pengajuan: " + err.Error()})
+	}
+
+	return c.JSON(fiber.Map{"message": "Submission rejected and removed."})
 }
 
 func GetStats(c *fiber.Ctx) error {

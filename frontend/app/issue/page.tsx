@@ -199,13 +199,48 @@ export default function IssuePage() {
                         >
                             {loading ? <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/20 border-t-white" /> : (
                                 <>
-                                    {isAdmin ? "Generate DigSi Seal" : "Kirim ke Admin"}
-                                    <ArrowRight className="w-4 h-4" />
+                                    <span>{isAdmin ? "Generate DigSi Seal" : "Kirim DigSi Seal"}</span>
+                                    <ArrowRight className="w-5 h-5" />
                                 </>
                             )}
                         </motion.button>
                     </form>
                 </div>
+
+                {/* Purpose Explanation Section */}
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="mt-8 clay-card p-8 bg-gradient-to-br from-slate-50 to-white border-2 border-white space-y-6"
+                >
+                    <div className="flex items-center gap-3">
+                        <Info className="text-blue-500 w-5 h-5" />
+                        <h4 className="font-bold text-slate-800">Apa Itu Portal Ini?</h4>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                                <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                                <span className="font-black text-[10px] uppercase tracking-wider text-slate-400">Penerbitan RSA (Admin)</span>
+                            </div>
+                            <p className="text-xs text-slate-500 leading-relaxed">
+                                Digunakan untuk membuat sertifikat digital baru secara langsung. Sistem akan menaruh <strong>Digital Signature RSA-2048</strong> ke dalam dokumen yang membuat dokumen tersebut tidak bisa dipalsukan.
+                            </p>
+                        </div>
+
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                                <Database className="w-4 h-4 text-blue-500" />
+                                <span className="font-black text-[10px] uppercase tracking-wider text-slate-400">Verifikasi Ledger (User)</span>
+                            </div>
+                            <p className="text-xs text-slate-500 leading-relaxed">
+                                Digunakan untuk mendaftarkan sidik jari digital (Hash) dari sertifikat yang sudah ada. Admin akan meninjau pengajuan Anda sebelum memasukkannya ke dalam <strong>Trusted Ledger</strong>.
+                            </p>
+                        </div>
+                    </div>
+                </motion.div>
             </div>
 
             {/* Results Section */}
