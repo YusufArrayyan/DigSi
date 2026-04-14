@@ -7,6 +7,8 @@ import (
 	"log"
 	"os"
 	"strings"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 var DB *gorm.DB
@@ -16,7 +18,7 @@ type User struct {
 	gorm.Model
 	Username string `gorm:"unique;not null" json:"username"`
 	Password string `gorm:"not null" json:"-"`
-	Role     string `gorm:"default:admin" json:"role"`
+	Role     string `gorm:"default:user" json:"role"`
 }
 
 // Certificate model for RSA-signed seals
@@ -91,13 +93,30 @@ func InitDB() {
 	}
 
 	// Auto-migrate the schema with localized error handling
-	log.Println("Database schema check bypassed for Safe Startup mode.")
-	/*
-		err = DB.AutoMigrate(&User{}, &Certificate{}, &PendingSubmission{}, &FileHash{})
-		if err != nil {
-			log.Printf("WARNING: Database migration failed. Error: %v", err)
-		} else {
-			log.Println("Database schema is up to date.")
+	log.Println("Applying database migrations...")
+	if err := DB.AutoMigrate(&User{}, &Certificate{}, &PendingSubmission{}, &FileHash{}); err != nil {
+		log.Printf("WARNING: Database migration failed. Error: %v", err)
+	} else {
+		log.Println("Database migration completed.")
+		SeedAdmin()
+	}
+}
+
+func SeedAdmin() {
+	var count int64
+	DB.Model(&User{}).Where("username = ?", "admin").Count(&count)
+	if count == 0 {
+		log.Println("Seeding default admin user...")
+		// Password is '12345678' hashed with bcrypt
+		// Using a fixed salt/cost for consistency
+		// In production, you would let the user change this
+		hashed, _ := bcrypt.GenerateFromPassword([]byte("12345678"), 10)
+		admin := User{
+			Username: "admin",
+			Password: string(hashed),
+			Role:     "admin",
 		}
-	*/
+		DB.Create(&admin)
+		log.Println("Admin user created successfully.")
+	}
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { LayoutWrapper } from "@/components/LayoutWrapper";
 import { motion, AnimatePresence } from "framer-motion";
 import { UserPlus, FilePlus, Calendar, ShieldCheck, Database, ArrowUpCircle, Info, Inbox, Check, X, Clock } from "lucide-react";
@@ -26,12 +27,17 @@ export default function AdminPage() {
   const [status, setStatus] = useState<{ message: string; success: boolean } | null>(null);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   
-  const { callApi } = useAdmin();
+  const { isAdmin, callApi } = useAdmin();
+  const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    if (!isAdmin) {
+        router.push("/auth");
+        return;
+    }
     fetchSubmissions();
-  }, []);
+  }, [isAdmin]);
 
   const fetchSubmissions = async () => {
     try {

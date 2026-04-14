@@ -68,7 +68,7 @@ func SetupRoutes(app *fiber.App) {
 		router.Get("/stats", GetStats)
 
 		// Protected Admin routes
-		admin := router.Group("/", middleware.AuthMiddleware)
+		admin := router.Group("/", middleware.AuthMiddleware, middleware.AdminOnly)
 		admin.Post("/generate", GenerateCertificate)
 		admin.Post("/register-hash", RegisterFileHash)
 		admin.Get("/pending-submissions", GetPendingSubmissions)
@@ -91,6 +91,7 @@ func RegisterUser(c *fiber.Ctx) error {
 	user := db.User{
 		Username: req.Username,
 		Password: string(hashed),
+		Role:     "user", // Strictly enforce user role
 	}
 
 	if err := db.DB.Create(&user).Error; err != nil {

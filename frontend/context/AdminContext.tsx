@@ -26,8 +26,9 @@ export const AdminProvider = ({ children }: { children: React.ReactNode }) => {
     setHasMounted(true);
     const savedToken = localStorage.getItem("digsi_admin_token");
     const savedUser = localStorage.getItem("digsi_admin_user");
-    if (savedToken && savedUser) {
-        setIsAdmin(true);
+    const savedRole = localStorage.getItem("digsi_admin_role");
+    if (savedToken && savedUser && savedRole) {
+        setIsAdmin(savedRole === "admin");
         setToken(savedToken);
         setUsername(savedUser);
     }
@@ -43,11 +44,12 @@ export const AdminProvider = ({ children }: { children: React.ReactNode }) => {
         
         if (res.ok) {
             const data = await res.json();
-            setIsAdmin(true);
+            setIsAdmin(data.role === "admin");
             setToken(data.token);
             setUsername(data.username);
             localStorage.setItem("digsi_admin_token", data.token);
             localStorage.setItem("digsi_admin_user", data.username);
+            localStorage.setItem("digsi_admin_role", data.role);
             return true;
         }
         return false;

@@ -5,6 +5,7 @@ import { LayoutWrapper } from "@/components/LayoutWrapper";
 import { motion } from "framer-motion";
 import { API_BASE_URL } from "@/lib/api";
 import { ShieldCheck, Zap, Lock, Globe, ArrowRight, Fingerprint, Activity, Database } from "lucide-react";
+import { useAdmin } from "@/context/AdminContext";
 import Link from "next/link";
 
 const FeatureCard = ({ icon: Icon, title, desc, color }: { icon: any; title: string; desc: string; color: string }) => (
@@ -33,6 +34,7 @@ const StatCard = ({ icon: Icon, label, value }: { icon: any; label: string; valu
 )
 
 export default function DashboardPage() {
+  const { isAdmin } = useAdmin();
   const [stats, setStats] = React.useState({
     total_certificates: 0,
     today_verifications: 0,
@@ -80,11 +82,13 @@ export default function DashboardPage() {
                   <ArrowRight className="w-4 h-4" />
                 </motion.div>
               </Link>
-              <Link href="/admin">
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.95 }} className="clay-button px-10 py-5 bg-white text-slate-600 font-black uppercase tracking-widest text-sm cursor-pointer">
-                  Admin Panel
-                </motion.div>
-              </Link>
+              {isAdmin && (
+                <Link href="/admin">
+                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.95 }} className="clay-button px-10 py-5 bg-white text-slate-600 font-black uppercase tracking-widest text-sm cursor-pointer">
+                    Admin Panel
+                  </motion.div>
+                </Link>
+              )}
             </div>
           </div>
 
