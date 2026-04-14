@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { LayoutWrapper } from "@/components/LayoutWrapper";
 import { motion, AnimatePresence } from "framer-motion";
-import { FilePlus, ShieldCheck, Download, User, BookOpen, Calendar, Hash, ArrowRight, CheckCircle2, Clock, ArrowUpCircle } from "lucide-react";
+import { FilePlus, ShieldCheck, Download, User, BookOpen, Calendar, Hash, ArrowRight, CheckCircle2, Clock, ArrowUpCircle, Info, Database } from "lucide-react";
 import { API_BASE_URL } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { useAdmin } from "@/context/AdminContext";
