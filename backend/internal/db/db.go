@@ -89,6 +89,8 @@ func InitDB() {
 
 	// Auto-migrate the schema with localized error handling
 	log.Println("Starting database auto-migration...")
+	err = DB.AutoMigrate(&User{}, &Certificate{}, &PendingSubmission{}, &FileHash{})
+	if err != nil {
 		log.Printf("WARNING: Database migration failed. Error: %v", err)
 		log.Println("Note: If tables already exist, this might be a non-fatal mapping error.")
 	} else {
