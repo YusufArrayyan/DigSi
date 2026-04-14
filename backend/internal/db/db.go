@@ -90,12 +90,13 @@ func InitDB() {
 	}
 
 	// Auto-migrate the schema with localized error handling
-	log.Println("Checking database schema...")
-	// We use a small delay or just run it; Neon works better when not rushed during TCP handshake
-	err = DB.AutoMigrate(&User{}, &Certificate{}, &PendingSubmission{}, &FileHash{})
-	if err != nil {
-		log.Printf("WARNING: Database migration failed. Error: %v", err)
-	} else {
-		log.Println("Database schema is up to date.")
-	}
+	log.Println("Database schema check bypassed for Safe Startup mode.")
+	/*
+		err = DB.AutoMigrate(&User{}, &Certificate{}, &PendingSubmission{}, &FileHash{})
+		if err != nil {
+			log.Printf("WARNING: Database migration failed. Error: %v", err)
+		} else {
+			log.Println("Database schema is up to date.")
+		}
+	*/
 }
