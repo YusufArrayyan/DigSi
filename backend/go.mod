@@ -1,6 +1,6 @@
 module digsi-backend
 
-go 1.25.5
+go 1.25.0
 
 require (
 	github.com/glebarez/sqlite v1.11.0

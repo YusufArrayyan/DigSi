@@ -86,6 +86,10 @@ func main() {
 		return c.SendString("OK")
 	})
 
+	app.Get("/api/health", func(c *fiber.Ctx) error {
+		return c.SendString("OK")
+	})
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
