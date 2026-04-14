@@ -83,12 +83,14 @@ func InitDB() {
 	}
 
 	if err != nil {
-		log.Fatal("Failed to connect to database:", err)
+		log.Printf("CRITICAL: Failed to connect to database using DSN. Error: %v", err)
+		log.Fatal("Stopping backend due to database connection failure.")
 	}
 
 	// Auto-migrate the schema
 	err = DB.AutoMigrate(&User{}, &Certificate{}, &PendingSubmission{}, &FileHash{})
 	if err != nil {
-		log.Fatal("Failed to migrate database schema:", err)
+		log.Printf("CRITICAL: Database migration (AutoMigrate) failed. Error: %v", err)
+		log.Fatal("Stopping backend due to migration failure.")
 	}
 }

@@ -7,6 +7,7 @@ import (
 	"digsi-backend/internal/crypto"
 	"digsi-backend/internal/db"
 	"digsi-backend/internal/middleware"
+	"log"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -93,9 +94,11 @@ func RegisterUser(c *fiber.Ctx) error {
 	}
 
 	if err := db.DB.Create(&user).Error; err != nil {
-		return c.Status(fiber.StatusConflict).JSON(fiber.Map{"error": "Username already exists"})
+		log.Printf("ERROR: Failed to register user %s. DB Error: %v", req.Username, err)
+		return c.Status(fiber.StatusConflict).JSON(fiber.Map{"error": "Username already exists or database error"})
 	}
 
+	log.Printf("SUCCESS: User %s registered successfully", req.Username)
 	return c.JSON(fiber.Map{"message": "Registration successful"})
 }
 
