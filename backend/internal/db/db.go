@@ -76,7 +76,9 @@ func InitDB() {
 
 	if dsn != "" {
 		log.Println("Connecting to PostgreSQL (Found DATABASE_URL)...")
-		DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+		DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
+			PrepareStmt: false,
+		})
 	} else {
 		log.Println("Connecting to SQLite (digsi.db)...")
 		DB, err = gorm.Open(sqlite.Open("digsi.db"), &gorm.Config{})
@@ -88,12 +90,12 @@ func InitDB() {
 	}
 
 	// Auto-migrate the schema with localized error handling
-	log.Println("Starting database auto-migration...")
+	log.Println("Checking database schema...")
+	// We use a small delay or just run it; Neon works better when not rushed during TCP handshake
 	err = DB.AutoMigrate(&User{}, &Certificate{}, &PendingSubmission{}, &FileHash{})
 	if err != nil {
 		log.Printf("WARNING: Database migration failed. Error: %v", err)
-		log.Println("Note: If tables already exist, this might be a non-fatal mapping error.")
 	} else {
-		log.Println("Database migration completed successfully.")
+		log.Println("Database schema is up to date.")
 	}
 }
