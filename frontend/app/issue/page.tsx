@@ -160,9 +160,6 @@ export default function IssuePage() {
                     </form>
                 </div>
             </div>
-                    </form>
-                </div>
-            </div>
 
             {/* Results Section */}
             <div className="lg:col-span-12 xl:col-span-5 space-y-8">
